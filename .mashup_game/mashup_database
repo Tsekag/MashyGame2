@@ -1,0 +1,260 @@
+-- Table structure for table `comments`
+--
+
+CREATE TABLE `comments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `upload_id` int(11) NOT NULL,
+  `comment_text` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `genres`
+--
+
+CREATE TABLE `genres` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `genres`
+--
+
+INSERT INTO `genres` (`id`, `name`, `is_active`, `created_at`, `updated_at`) VALUES
+(25, 'Fantasy', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(26, 'Sci-Fi', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(27, 'Medieval', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(28, 'Pirate', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(29, 'Ninja', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(30, 'Robot', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(31, 'Zombie', 1, '2025-09-21 17:19:46', '2025-09-21 17:19:46'),
+(33, 'KDRAMA', 1, '2025-09-21 17:41:37', '2025-09-21 17:41:37'),
+(34, 'CARTOON', 1, '2025-09-21 22:24:40', '2025-09-21 22:24:40'),
+(35, 'ADVENTURE', 1, '2025-09-23 14:40:36', '2025-09-23 14:40:36'),
+(37, 'HORROR', 1, '2025-09-23 14:40:36', '2025-09-23 14:40:36'),
+(38, 'MYSTERY', 1, '2025-09-23 14:40:36', '2025-09-23 14:40:36'),
+(39, 'ROMANCE', 1, '2025-09-23 14:40:36', '2025-09-23 14:40:36');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `genre_characters`
+--
+
+CREATE TABLE `genre_characters` (
+  `id` int(11) NOT NULL,
+  `genre_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `image_url` varchar(500) NOT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `genre_characters`
+--
+
+INSERT INTO `genre_characters` (`id`, `genre_id`, `name`, `image_url`, `is_active`, `description`, `created_at`, `updated_at`) VALUES
+(19, 25, 'Askeladd', '/uploads/Askeladd.jpg', 1, 'Viking Warrior', '2025-09-21 10:13:51', '2025-09-21 17:39:49'),
+(20, 25, 'Canute', '/uploads/Canute.jpg', 1, 'Noble Prince', '2025-09-21 10:13:51', '2025-09-21 17:39:49'),
+(21, 25, 'Kida', '/uploads/Kida.jpg', 1, 'Atlantean Princess', '2025-09-21 10:13:51', '2025-09-21 17:39:49'),
+(22, 25, 'Neij Hyuga', '/uploads/NeijHyuga.jpg', 1, 'Ninja Warrior', '2025-09-21 10:13:51', '2025-09-21 17:39:49'),
+(23, 25, 'Raeliana', '/uploads/Raeliana (2).jpg', 1, 'Noble Lady', '2025-09-21 10:13:51', '2025-09-21 17:39:49'),
+(24, 25, 'Violet Evergarden', '/uploads/VioletEverGarden.jpg', 1, 'Auto Memory Doll', '2025-09-21 10:13:52', '2025-09-21 17:39:49'),
+(25, 26, 'BayMax', '/uploads/BayMax.jpg', 1, 'Healthcare Companion Robot', '2025-09-21 10:13:52', '2025-09-21 17:39:49'),
+(26, 26, 'Flash', '/uploads/Flash.jpg', 1, 'Speedster Hero', '2025-09-21 10:13:52', '2025-09-21 17:39:49'),
+(27, 26, 'Iron Man', '/uploads/IronMan.jpg', 1, 'Tech Genius', '2025-09-21 10:13:52', '2025-09-21 17:39:49'),
+(28, 26, 'Jake Sully', '/uploads/JakeSullyAvatar.jpg', 1, 'Avatar Warrior', '2025-09-21 10:13:52', '2025-09-21 17:39:49'),
+(29, 26, 'MegaMind', '/uploads/MegaMind.jpg', 1, 'Supervillain', '2025-09-21 10:13:53', '2025-09-21 17:39:49'),
+(30, 26, 'Rodney', '/uploads/Rodney.jpg', 1, 'Robot Inventor', '2025-09-21 10:13:53', '2025-09-21 17:39:49'),
+(31, 26, 'X-Man', '/uploads/XMan.jpg', 1, 'Mutant Hero', '2025-09-21 10:13:53', '2025-09-21 17:39:49'),
+(32, 27, 'BeetleJuice', '/uploads/BeetleJuice.jpg', 1, 'Ghost with the Most', '2025-09-21 10:13:53', '2025-09-21 17:39:49'),
+(33, 27, 'Hatter', '/uploads/Hatter.jpg', 1, 'Mad Hatter', '2025-09-21 10:13:54', '2025-09-21 17:39:49'),
+(34, 27, 'The White Queen', '/uploads/TheWhiteQueen.jpg', 1, 'Royal Majesty', '2025-09-21 10:13:54', '2025-09-21 17:39:49'),
+(35, 27, 'TinkerBell', '/uploads/TinkerBell.jpg', 1, 'Fairy', '2025-09-21 10:13:54', '2025-09-21 17:39:49'),
+(36, 27, 'Vidia', '/uploads/Vidia.jpg', 1, 'Fast Flying Fairy', '2025-09-21 10:13:54', '2025-09-21 17:39:49'),
+(37, 28, 'Captain Hook', '/uploads/CaptainHook.jpg', 1, 'Pirate Captain', '2025-09-21 10:13:54', '2025-09-21 17:39:49'),
+(38, 28, 'Jack Sparrow', '/uploads/JackSparrow.jpg', 1, 'Pirate of the Caribbean', '2025-09-21 10:13:54', '2025-09-21 17:39:49'),
+(39, 29, 'Lioy', '/uploads/Lioy.jpg', 1, 'Stealth Warrior', '2025-09-21 10:13:55', '2025-09-21 17:39:49'),
+(40, 29, 'Mikiy', '/uploads/Mikiy.jpg', 1, 'Shadow Assassin', '2025-09-21 10:13:55', '2025-09-21 17:39:49'),
+(41, 30, 'Blue', '/uploads/Blue.jpg', 1, 'Robotic Companion', '2025-09-21 10:13:55', '2025-09-21 17:39:49'),
+(42, 31, 'Emily The Corpse Bride', '/uploads/EmilyTheCorpseBride.jpg', 1, 'Undead Bride', '2025-09-21 10:13:55', '2025-09-21 17:39:49');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `likes`
+--
+
+CREATE TABLE `likes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `upload_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `uploads`
+--
+
+CREATE TABLE `uploads` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `image_url` varchar(500) NOT NULL,
+  `character1_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`character1_data`)),
+  `character2_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`character2_data`)),
+  `genres` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`genres`)),
+  `likes_count` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `selected_genres` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`selected_genres`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `role` enum('user','admin') NOT NULL DEFAULT 'user'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `comments`
+--
+ALTER TABLE `comments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `upload_id` (`upload_id`);
+
+--
+-- Indexes for table `genres`
+--
+ALTER TABLE `genres`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `genre_characters`
+--
+ALTER TABLE `genre_characters`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `genre_id` (`genre_id`);
+
+--
+-- Indexes for table `likes`
+--
+ALTER TABLE `likes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_like` (`user_id`,`upload_id`),
+  ADD KEY `upload_id` (`upload_id`);
+
+--
+-- Indexes for table `uploads`
+--
+ALTER TABLE `uploads`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `comments`
+--
+ALTER TABLE `comments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `genres`
+--
+ALTER TABLE `genres`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT for table `genre_characters`
+--
+ALTER TABLE `genre_characters`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- AUTO_INCREMENT for table `likes`
+--
+ALTER TABLE `likes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
+-- AUTO_INCREMENT for table `uploads`
+--
+ALTER TABLE `uploads`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `comments`
+--
+ALTER TABLE `comments`
+  ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`upload_id`) REFERENCES `uploads` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `genre_characters`
+--
+ALTER TABLE `genre_characters`
+  ADD CONSTRAINT `genre_characters_ibfk_1` FOREIGN KEY (`genre_id`) REFERENCES `genres` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `likes`
+--
+ALTER TABLE `likes`
+  ADD CONSTRAINT `likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `likes_ibfk_2` FOREIGN KEY (`upload_id`) REFERENCES `uploads` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `uploads`
+--
+ALTER TABLE `uploads`
+  ADD CONSTRAINT `uploads_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+COMMIT;
+

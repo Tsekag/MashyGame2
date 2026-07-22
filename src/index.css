@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Enhanced 3D Flip Effects === */
+.perspective-1000 { perspective: 1200px; }
+.transform-style-preserve-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); }
+.card-transition {
+  transition: transform 0.9s cubic-bezier(0.4, 0.2, 0.2, 1),
+              box-shadow 0.5s ease-in-out;
+  will-change: transform, box-shadow;
+}
+.card-glow {
+  border: 2px solid transparent;
+  border-image: linear-gradient(45deg, #9333ea, #3b82f6, #9333ea) 1;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.7),
+              0 0 45px rgba(59, 130, 246, 0.6);
+  border-radius: 1rem;
+}
+@keyframes sparkle {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3) rotate(10deg); }
+}
+.sparkle::after {
+  content: "✨";
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  animation: sparkle 2s infinite ease-in-out;
+  color: #facc15;
+  pointer-events: none;
+}
+.gradient-text {
+  background: linear-gradient(to right, #a855f7, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@media (max-width: 768px) {
+  .w-80 { width: 90% !important; }
+  .h-96 { height: 24rem !important; }
+}
+
+/* 🎨 Spinner Page Styling */
+.spinner-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #1e0036 0%, #0d001a 100%);
+  padding: 2rem;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+}
+.spinner-container { text-align: center; max-width: 900px; width: 100%; }
+.spinner-container h1 {
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff66ff;
+}
+.spinner-container p { font-size: 1.2rem; margin-bottom: 2rem; color: #ddd; }
+.spinner-wrapper { position: relative; width: 320px; height: 320px; margin: 2rem auto; }
+.wheel {
+  width: 100%; height: 100%; border-radius: 50%; border: 10px solid gold;
+  overflow: hidden;
+  background: conic-gradient(
+    #ff6b6b 0deg 45deg, #4ecdc4 45deg 90deg, #ffeaa7 90deg 135deg,
+    #a29bfe 135deg 180deg, #54a0ff 180deg 225deg, #ff9ff3 225deg 270deg,
+    #00cec9 270deg 315deg, #fab1a0 315deg 360deg
+  );
+  transition: transform 3s ease-out; position: relative;
+}
+.wheel-segment { position: absolute; width: 100%; height: 100%; top: 0; left: 0; display: flex; justify-content: center; align-items: center; }
+.wheel-segment span {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-weight: bold;
+  color: #fff;
+}
+.wheel-pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 20px solid gold;
+}
+.spinner-container button {
+  background: linear-gradient(45deg, #ffdd00, #ff8800);
+  border: none;
+  padding: 1rem 2rem;
+  margin: 1rem;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.spinner-container button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 20px #ff8800;
+}
+.result-card {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.result-item {
+  background: linear-gradient(135deg, #7d5fff, #7158e2);
+  padding: 1rem;
+  border-radius: 15px;
+  text-align: center;
+}
+.result-item img {
+  width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 0.5rem;
+}
+.result-item span {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+/* ==================== Neon Navigation Styles ==================== */
+.neon-nav {
+  background: rgba(25, 10, 60, 0.7); /* dark blue/purple glass */
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(60, 30, 120, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  overflow: hidden;
+}
+.neon-nav::before {
+  content: '';
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.15);
+  pointer-events: none;
+  z-index: 0;
+}
+.neon-nav > div { position: relative; z-index: 1; }
+
+/* Logo glow */
+.neon-text {
+  color: #fff;
+  text-shadow:
+    0 0 5px #7b5fff,
+    0 0 10px #6b21a8,
+    0 0 20px #7b5fff,
+    0 0 40px #6b21a8;
+  font-weight: 800;
+  cursor: default;
+}
+
+/* Nav button base style */
+.neon-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+/* Button hover glow */
+.neon-button:hover {
+  background: rgba(123, 95, 255, 0.15);
+  color: #e0d7ff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 5px #7b5fff, 0 0 10px #6b21a8, 0 0 20px #7b5fff;
+}
+
+/* Active nav button glow */
+.active-neon {
+  background: rgba(123, 95, 255, 0.2);
+  box-shadow: 0 0 10px #7b5fff, 0 0 20px #6b21a8, 0 0 30px #7b5fff;
+  color: #fff;
+}
+
+/* Icon hover animation */
+.neon-button svg {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+.neon-button:hover svg { transform: rotate(10deg) scale(1.1); color: #e0d7ff; }
+
+/* Logout button neon red */
+.logout-neon {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 0 10px #ff0000, 0 0 20px #ff4444, 0 0 30px #ff6666;
+}
+.logout-neon:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 15px #ff0000, 0 0 25px #ff4444, 0 0 35px #ff6666;
+}
+
+/* Welcome text glow */
+span.neon-text {
+  text-shadow: 0 0 3px #7b5fff, 0 0 5px #6b21a8, 0 0 10px #7b5fff;
+}
+
+/* Small responsive tweaks */
+@media (max-width: 768px) { div.hidden.md\\:flex { display: none; } }
+/* ==================== Mobile Menu Slide Animation ==================== */
+@keyframes slideDown {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* Apply animation classes */
+.mobile-menu-open {
+  animation: slideDown 0.25s ease-out forwards;
+}
+
+.mobile-menu-close {
+  animation: slideUp 0.2s ease-in forwards;
+}
