@@ -12,6 +12,17 @@ const router = express.Router();
 const serverRoutesDir = path.dirname(fileURLToPath(import.meta.url));
 const serverDir = path.resolve(serverRoutesDir, '..');
 const uploadsDir = path.join(serverDir, 'uploads');
+const logFilePath = path.join(serverDir, 'admin-update-errors.log');
+
+function appendErrorLog(message, req) {
+  const requestInfo = req ? ` [${req.method} ${req.originalUrl} user=${req.user?.id ?? 'unknown'}]` : '';
+  try {
+    fs.appendFileSync(logFilePath, `${new Date().toISOString()}${requestInfo} - ${message}\n`, 'utf8');
+  } catch (err) {
+    console.error('Failed to write admin error log:', err);
+  }
+}
+
 const legacyUploadsDir = path.resolve(serverDir, '..', 'uploads');
 
 function getStoredImagePath(imageUrl) {
@@ -24,8 +35,8 @@ function getStoredImagePath(imageUrl) {
   return currentPath;
 }
 
-// Multer configuration for image uploads
-const storage = multer.diskStorage({
+// Multer configuration for character image uploads
+const characterStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
@@ -38,22 +49,49 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
+const genreStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'genre-' + uniqueSuffix + path.extname(file.originalname));
   }
+});
+
+const imageFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|jfif|png|gif|webp/;
+  const fileExt = path.extname(file.originalname).toLowerCase().replace('.', '');
+  const extname = fileExt ? allowedTypes.test(fileExt) : false;
+  const mimetype = file.mimetype.startsWith('image/');
+
+  console.log('Genre image upload check', {
+    originalname: file.originalname,
+    fileExt,
+    mimetype: file.mimetype,
+    extname,
+    mimetypeValid: mimetype,
+  });
+
+  if (mimetype && (extname || !fileExt)) {
+    return cb(null, true);
+  }
+  cb(new Error('Only image files are allowed'));
+};
+
+const upload = multer({
+  storage: characterStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: imageFilter
+});
+
+const uploadGenre = multer({
+  storage: genreStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: imageFilter
 });
 
 // Apply authentication and admin middleware to all routes
@@ -66,7 +104,7 @@ router.use(requireAdmin);
 router.get('/genres', async (req, res) => {
   try {
     const [genres] = await pool.execute(
-      'SELECT id, name, emoji, is_active, created_at, updated_at FROM genres ORDER BY name ASC'
+      'SELECT id, name, emoji, image_url, is_active, created_at, updated_at FROM genres ORDER BY name ASC'
     );
     res.json({ genres });
   } catch (error) {
@@ -87,30 +125,33 @@ function validateGenreName(name) {
 }
 
 // POST /api/admin/genres - Create new genre
-router.post('/genres', async (req, res) => {
+router.post('/genres', uploadGenre.single('image'), async (req, res) => {
   try {
-    const { name, emoji = '', is_active = true } = req.body;
-    
-    // Input validation
+    const { name, is_active = true } = req.body;
+
     if (!name || name.trim() === '') {
       return res.status(400).json({ error: 'Genre name is required' });
     }
-    
-    // Sanitize and validate
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Genre image is required' });
+    }
+
     const sanitizedName = sanitizeGenreName(name);
     if (sanitizedName.length < 1 || sanitizedName.length > 50) {
       return res.status(400).json({ error: 'Genre name must be between 1-50 characters' });
     }
-    
+
     if (!validateGenreName(sanitizedName)) {
       return res.status(400).json({ error: 'Genre name contains invalid characters' });
     }
 
-    const sanitizedEmoji = typeof emoji === 'string' ? emoji.trim() : '';
+    const imageUrl = `/uploads/${req.file.filename}`;
+    const activeStatus = is_active === 'true' || is_active === true;
 
     const [result] = await pool.execute(
-      'INSERT INTO genres (name, emoji, is_active) VALUES (?, ?, ?)',
-      [sanitizedName, sanitizedEmoji || null, is_active]
+      'INSERT INTO genres (name, image_url, is_active) VALUES (?, ?, ?)',
+      [sanitizedName, imageUrl, activeStatus]
     );
 
     res.status(201).json({
@@ -118,12 +159,13 @@ router.post('/genres', async (req, res) => {
       genre: {
         id: result.insertId,
         name: sanitizedName,
-        emoji: sanitizedEmoji || null,
-        is_active: is_active,
+        image_url: imageUrl,
+        is_active: activeStatus,
         created_at: new Date().toISOString()
       }
     });
   } catch (error) {
+    appendErrorLog(`Error creating genre: ${error.message}\n${error.stack || ''}`);
     if (error.code === 'ER_DUP_ENTRY') {
       res.status(409).json({ error: 'Genre already exists' });
     } else {
@@ -134,30 +176,59 @@ router.post('/genres', async (req, res) => {
 });
 
 // PUT /api/admin/genres/:id - Update genre
-router.put('/genres/:id', async (req, res) => {
+router.put('/genres/:id', uploadGenre.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, emoji = '', is_active } = req.body;
-    
+    const { name, is_active } = req.body;
+
+    console.log('Admin genre update request', {
+      id,
+      name,
+      is_active,
+      hasFile: !!req.file,
+      fileName: req.file?.originalname,
+      fileMimetype: req.file?.mimetype,
+    });
+
     if (!name || name.trim() === '') {
       return res.status(400).json({ error: 'Genre name is required' });
     }
 
-    // Sanitize and validate
     const sanitizedName = sanitizeGenreName(name);
     if (sanitizedName.length < 1 || sanitizedName.length > 50) {
       return res.status(400).json({ error: 'Genre name must be between 1-50 characters' });
     }
-    
+
     if (!validateGenreName(sanitizedName)) {
       return res.status(400).json({ error: 'Genre name contains invalid characters' });
     }
 
-    const sanitizedEmoji = typeof emoji === 'string' ? emoji.trim() : '';
+    const [existing] = await pool.execute(
+      'SELECT image_url FROM genres WHERE id = ?',
+      [id]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Genre not found' });
+    }
+
+    let imageUrl = existing[0].image_url;
+
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+      if (existing[0].image_url) {
+        const oldImagePath = getStoredImagePath(existing[0].image_url);
+        if (oldImagePath && fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    }
+
+    const activeStatus = is_active === 'true' || is_active === true;
 
     const [result] = await pool.execute(
-      'UPDATE genres SET name = ?, emoji = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [sanitizedName, sanitizedEmoji || null, is_active, id]
+      'UPDATE genres SET name = ?, image_url = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [sanitizedName, imageUrl, activeStatus, id]
     );
 
     if (result.affectedRows === 0) {
@@ -169,17 +240,19 @@ router.put('/genres/:id', async (req, res) => {
       genre: {
         id: parseInt(id),
         name: sanitizedName,
-        emoji: sanitizedEmoji || null,
-        is_active: is_active,
+        image_url: imageUrl,
+        is_active: activeStatus,
         updated_at: new Date().toISOString()
       }
     });
   } catch (error) {
+    appendErrorLog(`Error updating genre id=${req.params.id}: ${error.message}\n${error.stack || ''}`);
     if (error.code === 'ER_DUP_ENTRY') {
       res.status(409).json({ error: 'Genre already exists' });
     } else {
       console.error('Error updating genre:', error);
-      res.status(500).json({ error: 'Failed to update genre' });
+      console.error(error.stack);
+      res.status(500).json({ error: 'Failed to update genre', message: error.message });
     }
   }
 });
@@ -200,7 +273,7 @@ router.patch('/genres/:id/toggle', async (req, res) => {
 
     // Get updated genre data
     const [genres] = await pool.execute(
-      'SELECT id, name, emoji, is_active, created_at, updated_at FROM genres WHERE id = ?',
+      'SELECT id, name, emoji, image_url, is_active, created_at, updated_at FROM genres WHERE id = ?',
       [id]
     );
 
@@ -219,6 +292,15 @@ router.delete('/genres/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
+    const [genres] = await pool.execute(
+      'SELECT image_url FROM genres WHERE id = ?',
+      [id]
+    );
+
+    if (genres.length === 0) {
+      return res.status(404).json({ error: 'Genre not found' });
+    }
+
     const [result] = await pool.execute(
       'DELETE FROM genres WHERE id = ?',
       [id]
@@ -226,6 +308,14 @@ router.delete('/genres/:id', async (req, res) => {
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Genre not found' });
+    }
+
+    const imageUrl = genres[0].image_url;
+    if (imageUrl) {
+      const imagePath = getStoredImagePath(imageUrl);
+      if (imagePath && fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
     }
 
     res.json({ message: 'Genre deleted successfully' });

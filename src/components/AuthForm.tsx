@@ -26,10 +26,8 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
     try {
       let success = false;
       if (mode === 'login') {
-        // Real backend authentication - JWT token returned on success
         success = await login(email, password);
       } else {
-        // Real user registration - creates user in MySQL database
         success = await register(username, email, password);
       }
 
@@ -45,7 +43,8 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
       }
       // If successful, AuthContext updates with real user data from backend
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      const message = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

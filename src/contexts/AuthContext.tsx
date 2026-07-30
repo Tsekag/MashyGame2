@@ -109,18 +109,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setUser(null);
             }
           } catch (err) {
-            console.warn('Profile refresh failed during app init, keeping cached session if available');
-            if (!cachedUser) {
-              authAPI.setToken(null);
-              if (isAdminArea) {
-                localStorage.removeItem('adminToken');
-                localStorage.removeItem('adminUser');
-              } else {
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('auth_user');
-              }
-              setUser(null);
+            console.warn('Profile refresh failed during app init, clearing cached session');
+            authAPI.setToken(null);
+            if (isAdminArea) {
+              localStorage.removeItem('adminToken');
+              localStorage.removeItem('adminUser');
+            } else {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('auth_user');
             }
+            setUser(null);
           }
         }
       } catch (error) {
@@ -148,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      throw error;
     }
   };
 
@@ -168,7 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (error) {
       console.error('Registration failed:', error);
-      return false;
+      throw error;
     }
   };
 

@@ -6,7 +6,7 @@ const API_BASE_URL = getApiBaseUrl();
 interface Genre {
   id: string;
   name: string;
-  emoji?: string;  // Make emoji optional
+  image_url?: string;
 }
 
 export interface Character {
@@ -36,6 +36,12 @@ class ApiClient {
     this.token = import.meta.env.PROD ? null : localStorage.getItem('auth_token');
   }
 
+  private getToken(): string | null {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) return adminToken;
+    return this.token;
+  }
+
   private getCsrfToken(): string | null {
     if (typeof document === 'undefined') return null;
     const cookieParts = document.cookie.split(';').map((part) => part.trim());
@@ -58,7 +64,8 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (this.useCookieAuth && !this.isSafeMethod(method)) {
       const csrfToken = this.getCsrfToken();
       if (csrfToken) {
@@ -72,8 +79,15 @@ class ApiClient {
       credentials: this.useCookieAuth ? 'include' : options.credentials,
     });
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Network error' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      const body = await response.text();
+      let errorPayload: any = { message: 'Network error' };
+      try {
+        errorPayload = body ? JSON.parse(body) : {};
+      } catch {
+        errorPayload = { message: body || 'Network error' };
+      }
+      const message = errorPayload.message || errorPayload.error || `HTTP ${response.status}`;
+      throw new Error(message);
     }
 
     return response.json();
@@ -206,18 +220,52 @@ async getUserStats(userId: string): Promise<{ totalUploads: number; totalLikes: 
     return this.request<{ genres: any[] }>('/admin/genres');
   }
 
-  async createGenre(genreData: { name: string; emoji: string; is_active: boolean }): Promise<any> {
-    return this.request('/admin/genres', {
+  async createGenre(genreData: FormData): Promise<any> {
+    const headers: Record<string, string> = {};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (this.useCookieAuth) {
+      const csrfToken = this.getCsrfToken();
+      if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+    }
+
+    const response = await fetch(`${this.baseURL}/admin/genres`, {
       method: 'POST',
-      body: JSON.stringify(genreData),
+      headers,
+      body: genreData,
+      credentials: this.useCookieAuth ? 'include' : undefined,
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Create failed' }));
+      throw new Error(error.message || error.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
   }
 
-  async updateGenre(id: string, genreData: { name: string; emoji: string; is_active: boolean }): Promise<any> {
-    return this.request(`/admin/genres/${id}`, {
+  async updateGenre(id: string, genreData: FormData): Promise<any> {
+    const headers: Record<string, string> = {};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (this.useCookieAuth) {
+      const csrfToken = this.getCsrfToken();
+      if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+    }
+
+    const response = await fetch(`${this.baseURL}/admin/genres/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(genreData),
+      headers,
+      body: genreData,
+      credentials: this.useCookieAuth ? 'include' : undefined,
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Update failed' }));
+      throw new Error(error.message || error.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
   }
 
   async toggleGenre(id: string): Promise<any> {
@@ -234,7 +282,8 @@ async getUserStats(userId: string): Promise<{ totalUploads: number; totalLikes: 
 
   async createCharacter(characterData: FormData): Promise<any> {
     const headers: Record<string, string> = {};
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (this.useCookieAuth) {
       const csrfToken = this.getCsrfToken();
       if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
@@ -257,7 +306,8 @@ async getUserStats(userId: string): Promise<{ totalUploads: number; totalLikes: 
 
   async updateCharacter(id: string, characterData: FormData): Promise<any> {
     const headers: Record<string, string> = {};
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (this.useCookieAuth) {
       const csrfToken = this.getCsrfToken();
       if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
@@ -327,8 +377,8 @@ export const feedbackAPI = {
 
 export const adminAPI = {
   getGenres: () => api.getAdminGenres(),
-  createGenre: (genreData: { name: string; emoji: string; is_active: boolean }) => api.createGenre(genreData),
-  updateGenre: (id: string, genreData: { name: string; emoji: string; is_active: boolean }) => api.updateGenre(id, genreData),
+  createGenre: (genreData: FormData) => api.createGenre(genreData),
+  updateGenre: (id: string, genreData: FormData) => api.updateGenre(id, genreData),
   toggleGenre: (id: string) => api.toggleGenre(id),
   deleteGenre: (id: string) => api.deleteGenre(id),
   getCharacters: () => api.getAdminCharacters(),

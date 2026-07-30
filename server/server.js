@@ -11,6 +11,7 @@ if (!process.env.JWT_SECRET) {
 
 import express from 'express';
 import cors from 'cors';
+import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { testConnection, initializeDatabase } from './config/database.js';
@@ -75,7 +76,26 @@ app.get('/api/health', (req, res) => {
 
 // Error handling
 app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    console.error('Multer error:', err);
+    return res.status(400).json({
+      error: 'File upload error',
+      message: err.message,
+    });
+  }
+
+  if (err?.message === 'Only image files are allowed') {
+    console.error('Invalid image upload:', err.message);
+    return res.status(400).json({
+      error: 'Invalid file type',
+      message: err.message,
+    });
+  }
+
   console.error('Server error:', err);
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack);
+  }
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'

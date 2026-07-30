@@ -42,7 +42,7 @@ export const CharactersPage: React.FC = () => {
     image: null as File | null
   });
   const [error, setError] = useState('');
-  const DEFAULT_AVATAR = 'https://via.placeholder.com/96x96?text=No+Image';
+  const DEFAULT_AVATAR = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"%3E%3Crect width="96" height="96" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" fill="%23fff" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
 
   const resolveCharacterImageUrl = (imageUrl: string | null) => {
     if (!imageUrl) return DEFAULT_AVATAR;

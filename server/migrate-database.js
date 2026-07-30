@@ -40,6 +40,22 @@ async function migrateDatabase() {
         throw error;
       }
     }
+
+    // Add image_url column to genres table if it doesn't exist
+    try {
+      await pool.execute(`
+        ALTER TABLE genres
+        ADD COLUMN image_url VARCHAR(500) DEFAULT NULL
+        AFTER emoji
+      `);
+      console.log('✅ Added image_url column to genres table');
+    } catch (error) {
+      if (error.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  image_url column already exists in genres table');
+      } else {
+        throw error;
+      }
+    }
     
     // Add is_active column to genre_characters table if it doesn't exist
     try {

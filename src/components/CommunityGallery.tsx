@@ -3,7 +3,8 @@ import { useGame } from '../contexts/GameContext';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAPI } from '../services/api';
 import { resolveImageUrl } from '../config/api';
-import { Heart, Upload, Eye, EyeOff, Pencil } from 'lucide-react';
+import { Heart, Upload, Eye, EyeOff, Pencil, Sparkles } from 'lucide-react';
+import { UploadArtworkModal } from './UploadArtworkModal';
 
 export function CommunityGallery() {
   const { 
@@ -18,9 +19,6 @@ export function CommunityGallery() {
   const [filter, setFilter] = useState<'all' | 'liked' | 'recent'>('all');
   const [animatingLike, setAnimatingLike] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadDescription, setUploadDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [visibleDescriptions, setVisibleDescriptions] = useState<Record<string, boolean>>({});
@@ -95,22 +93,14 @@ export function CommunityGallery() {
     }
   });
 
-  const handleUpload = async () => {
-    if (!selectedFile || !uploadTitle) {
-      setUploadError('Please provide both title and image');
-      return;
-    }
-
+  const handleUpload = async (file: File, title: string, description: string) => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const success = await uploadArtwork(selectedFile, uploadTitle, uploadDescription);
+      const success = await uploadArtwork(file, title, description);
       if (success) {
         setShowUploadModal(false);
-        setUploadTitle('');
-        setUploadDescription('');
-        setSelectedFile(null);
         await loadCommunityPosts();
       } else {
         setUploadError('Upload failed. Please try again.');
@@ -123,7 +113,7 @@ export function CommunityGallery() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 py-12">
+    <div className="game-page-bg min-h-screen py-12">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">🎨 Community Gallery</h1>
@@ -132,10 +122,11 @@ export function CommunityGallery() {
           </p>
           <button
             onClick={() => setShowUploadModal(true)}
-            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 py-3 rounded-full font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2 mx-auto mb-8"
+            className="gallery-upload-cta"
           >
+            <Sparkles className="w-5 h-5" />
+            Start Gallery Mission
             <Upload className="w-5 h-5" />
-            Upload New Artwork
           </button>
         </div>
 
@@ -252,70 +243,14 @@ export function CommunityGallery() {
           </div>
         )}
 
-        {showUploadModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <h3 className="text-2xl font-bold mb-6">Upload Your Mashup</h3>
-              <p className="text-gray-600 mb-6">Share your creative interpretation with the community!</p>
-
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={uploadTitle}
-                    onChange={(e) => setUploadTitle(e.target.value)}
-                    placeholder="Enter a title for your artwork..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2">Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2">Description</label>
-                  <textarea
-                    value={uploadDescription}
-                    onChange={(e) => setUploadDescription(e.target.value)}
-                    rows={4}
-                    placeholder="Describe your mashup..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-
-                {uploadError && (
-                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {uploadError}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  disabled={isUploading}
-                  className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpload}
-                  disabled={isUploading || !uploadTitle || !selectedFile}
-                  className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isUploading ? 'Uploading...' : 'Upload Artwork'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <UploadArtworkModal
+          isOpen={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          onSubmit={handleUpload}
+          isUploading={isUploading}
+          uploadError={uploadError}
+          variant="gallery"
+        />
 
         {editingPost && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">

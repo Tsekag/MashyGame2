@@ -18,9 +18,13 @@ function toAbsoluteImageUrl(req, imageUrl) {
 router.get('/genres', async (req, res) => {
   try {
     const [genres] = await pool.execute(
-      'SELECT id, name, emoji FROM genres WHERE is_active = 1 ORDER BY name ASC'
+      'SELECT id, name, image_url FROM genres WHERE is_active = 1 ORDER BY name ASC'
     );
-    res.json(genres);
+    const genresWithUrls = genres.map((genre) => ({
+      ...genre,
+      image_url: toAbsoluteImageUrl(req, genre.image_url),
+    }));
+    res.json(genresWithUrls);
   } catch (error) {
     console.error('Error fetching genres:', error);
     res.status(500).json({ error: 'Failed to fetch genres' });

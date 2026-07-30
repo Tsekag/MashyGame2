@@ -54,6 +54,7 @@ export async function initializeDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) UNIQUE NOT NULL,
         emoji VARCHAR(32) DEFAULT NULL,
+        image_url VARCHAR(500) DEFAULT NULL,
         is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -75,6 +76,22 @@ export async function initializeDatabase() {
         AFTER name
       `);
       console.log('✅ Added emoji column to genres table');
+    }
+
+    const [imageUrlColumn] = await pool.execute(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'genres'
+         AND COLUMN_NAME = 'image_url'`
+    );
+    if (imageUrlColumn.length === 0) {
+      await pool.execute(`
+        ALTER TABLE genres
+        ADD COLUMN image_url VARCHAR(500) DEFAULT NULL
+        AFTER emoji
+      `);
+      console.log('✅ Added image_url column to genres table');
     }
 
     // Create genre_characters table

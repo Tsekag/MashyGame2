@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { generateCsrfToken, csrfCookieOptions } from '../middleware/csrf.js';
+import { sanitizeInput, validateEmail, validateUsername } from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -68,22 +69,6 @@ function cookieOptions() {
   };
 }
 
-// Input validation and sanitization functions
-function sanitizeInput(input) {
-  if (typeof input !== 'string') return '';
-  return input.trim().replace(/[<>]/g, '');
-}
-
-function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-function validateUsername(username) {
-  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-  return usernameRegex.test(username);
-}
-
 // POST /api/auth/signup
 router.post('/signup', authRateLimit, async (req, res) => {
   try {
@@ -102,7 +87,7 @@ router.post('/signup', authRateLimit, async (req, res) => {
     }
     
     if (!validateUsername(sanitizedUsername)) {
-      return res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+      return res.status(400).json({ error: 'Username may only contain letters, numbers, spaces, underscores, dots, dashes, or apostrophes' });
     }
     
     if (!validateEmail(sanitizedEmail)) {
