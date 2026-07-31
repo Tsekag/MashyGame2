@@ -315,21 +315,6 @@ export function SpinningWheel({ onNavigateToCards }: SpinningWheelProps) {
 
         {showResult && currentResult && (
           <div className="spin-result-card">
-            <h2>🎉 Your Epic Mashup!</h2>
-            <div className="spin-result-grid">
-              <div className="spin-result-item">
-                <img src={currentResult.character1.image} alt={currentResult.character1.name} />
-                <h3>{currentResult.character1.name}</h3>
-                <p>{currentResult.character1.description}</p>
-                <span>{currentResult.character1.genre}</span>
-              </div>
-              <div className="spin-result-item">
-                <img src={currentResult.character2.image} alt={currentResult.character2.name} />
-                <h3>{currentResult.character2.name}</h3>
-                <p>{currentResult.character2.description}</p>
-                <span>{currentResult.character2.genre}</span>
-              </div>
-            </div>
             <div className="spin-result-actions">
               <button onClick={spinWheel}>🔄 Spin Again</button>
               {showNavigateButton && (
