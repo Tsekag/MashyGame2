@@ -3,8 +3,9 @@ import { useGame } from '../contexts/GameContext';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAPI } from '../services/api';
 import { resolveImageUrl } from '../config/api';
-import { Heart, Upload, Eye, EyeOff, Pencil, Sparkles } from 'lucide-react';
+import { Heart, Upload, Eye, EyeOff, Pencil, Sparkles, Maximize2 } from 'lucide-react';
 import { UploadArtworkModal } from './UploadArtworkModal';
+import { ImagePreviewModal } from './ImagePreviewModal';
 
 export function CommunityGallery() {
   const { 
@@ -24,6 +25,7 @@ export function CommunityGallery() {
   const [visibleDescriptions, setVisibleDescriptions] = useState<Record<string, boolean>>({});
   const [editingPost, setEditingPost] = useState<{ id: string; title: string; description: string } | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadCommunityPosts();
@@ -92,6 +94,15 @@ export function CommunityGallery() {
       default: return true;
     }
   });
+
+  const previewImages = filteredPosts.map((post) => ({
+    src: resolveImageUrl(post.imageUrl),
+    title: post.title || 'Untitled artwork',
+    description: post.description,
+    username: post.username,
+    likes: post.likes,
+    createdAt: post.createdAt,
+  }));
 
   const handleUpload = async (file: File, title: string, description: string) => {
     setIsUploading(true);
@@ -162,86 +173,109 @@ export function CommunityGallery() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPosts.map((post, index) => (
-              <div
+              <article
                 key={post.id}
-                className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-300 transform hover:scale-105"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="artwork-card"
+                style={{ animationDelay: `${index * 0.08}s` }}
               >
-                <div className="aspect-square overflow-hidden">
+                <div
+                  className="artwork-card-image-wrap"
+                  onClick={() => setPreviewIndex(index)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && setPreviewIndex(index)}
+                  aria-label={`View ${post.title}`}
+                >
                   <img
                     src={resolveImageUrl(post.imageUrl)}
                     alt={post.title}
-                    className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.src = 'https://images.pexels.com/photos/1374645/pexels-photo-1374645.jpeg?auto=compress&cs=tinysrgb&w=400';
                     }}
                   />
-                </div>
-
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-2">{post.title}</h3>
-                  <p className="text-gray-300 text-sm mb-4">by {post.username}</p>
-                  {visibleDescriptions[post.id] && (
-                    <p className="text-gray-200 text-sm mb-4 bg-white/10 rounded-lg p-3 whitespace-pre-wrap">
-                      {post.description || 'No description provided.'}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className={`
-                          flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200
-                          ${post.isLiked ? 'bg-red-500 text-white' : 'bg-white/20 text-gray-300 hover:bg-white/30'}
-                          ${animatingLike === post.id ? 'animate-pulse scale-110' : ''}
-                        `}
-                      >
-                        <Heart className={`w-5 h-5 ${post.isLiked ? 'fill-current' : ''}`} />
-                        <span>{post.likes}</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleToggleDescription(post.id)}
-                        type="button"
-                        title={visibleDescriptions[post.id] ? 'Hide description' : 'Show description'}
-                        className="ml-2 text-cyan-300 hover:text-cyan-100 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm inline-flex items-center gap-2"
-                      >
-                        {visibleDescriptions[post.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        {visibleDescriptions[post.id] ? 'Hide' : 'View'}
-                      </button>
-
-                      {(user && (user.id === post.userId || user.role === 'admin')) && (
-                        <>
-                          <button
-                            onClick={() => handleStartEdit(post)}
-                            type="button"
-                            title="Edit upload"
-                            className="ml-2 text-yellow-300 hover:text-yellow-100 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm inline-flex items-center gap-2"
-                          >
-                            <Pencil className="w-4 h-4" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(post.id)}
-                            type="button"
-                            title="Delete upload"
-                            className="ml-2 text-red-400 hover:text-red-600 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </div>
+                  <div className="artwork-card-image-overlay">
+                    <span className="artwork-card-expand-icon">
+                      <Maximize2 className="h-5 w-5" />
+                    </span>
+                    <span className="artwork-card-expand-label">View Fullscreen</span>
                   </div>
                 </div>
-              </div>
+
+                <div className="artwork-card-body">
+                  <h3 className="artwork-card-title">{post.title}</h3>
+                  <p className="artwork-card-author">by {post.username}</p>
+
+                  {visibleDescriptions[post.id] && (
+                    <div className="artwork-card-description">
+                      <div className="artwork-card-description-label">
+                        <Sparkles className="h-3 w-3" />
+                        Creative Vision
+                      </div>
+                      <p className="artwork-card-description-inner">
+                        {post.description || 'No description provided.'}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="artwork-card-actions">
+                    <button
+                      onClick={() => handleLike(post.id)}
+                      className={`artwork-card-like-btn ${
+                        post.isLiked ? 'artwork-card-like-btn--active' : 'artwork-card-like-btn--idle'
+                      } ${animatingLike === post.id ? 'animate-pulse scale-110' : ''}`}
+                    >
+                      <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-current' : ''}`} />
+                      <span>{post.likes}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleDescription(post.id)}
+                      type="button"
+                      title={visibleDescriptions[post.id] ? 'Hide description' : 'Show description'}
+                      className="artwork-card-action-btn artwork-card-action-btn--view"
+                    >
+                      {visibleDescriptions[post.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {visibleDescriptions[post.id] ? 'Hide' : 'Vision'}
+                    </button>
+
+                    {(user && (user.id === post.userId || user.role === 'admin')) && (
+                      <>
+                        <button
+                          onClick={() => handleStartEdit(post)}
+                          type="button"
+                          title="Edit upload"
+                          className="artwork-card-action-btn artwork-card-action-btn--edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(post.id)}
+                          type="button"
+                          title="Delete upload"
+                          className="artwork-card-action-btn artwork-card-action-btn--delete"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+
+                    <span className="artwork-card-date">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         )}
+
+        <ImagePreviewModal
+          images={previewImages}
+          initialIndex={previewIndex ?? 0}
+          isOpen={previewIndex !== null}
+          onClose={() => setPreviewIndex(null)}
+        />
 
         <UploadArtworkModal
           isOpen={showUploadModal}

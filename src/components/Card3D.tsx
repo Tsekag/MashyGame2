@@ -10,6 +10,8 @@ interface Card3DProps {
     description: string;
   };
   index: number;
+  /** Keep character art visible for mashup reference (not hover-only). */
+  alwaysVisible?: boolean;
 }
 
 function usePrefersReducedMotion() {
@@ -39,7 +41,7 @@ function getCharacterTeaser(description: string): string {
   return `${firstSentence.slice(0, 107).trim()}...`;
 }
 
-export function Card3D({ character, index }: Card3DProps) {
+export function Card3D({ character, index, alwaysVisible = false }: Card3DProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [imageSrc, setImageSrc] = useState(character.image);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export function Card3D({ character, index }: Card3DProps) {
     'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240"%3E%3Crect width="320" height="240" fill="%23111"/%3E%3Ctext x="50%25" y="50%25" fill="%23fff" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" dominant-baseline="middle"%3EImage Missing%3C/text%3E%3C/svg%3E';
 
   return (
-    <div className={`card-3d-wrapper ${reduceMotion ? 'card-3d-wrapper--static' : ''}`}>
+    <div className={`card-3d-wrapper ${reduceMotion ? 'card-3d-wrapper--static' : ''} ${alwaysVisible ? 'card-3d-wrapper--revealed' : ''}`}>
       <div
         ref={cardRef}
         className={`card-3d-inner ${isFlipped ? 'rotate-y-180' : ''}`}

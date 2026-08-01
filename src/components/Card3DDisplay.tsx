@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { Card3D } from './Card3D';
+import { MashupSlotCard } from './MashupSlotCard';
 import { Upload, Sparkles } from 'lucide-react';
 import { UploadArtworkModal } from './UploadArtworkModal';
 
@@ -11,6 +12,8 @@ export function Card3DDisplay() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [mashupFile, setMashupFile] = useState<File | null>(null);
+  const [mashupPreviewUrl, setMashupPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (spinResult) {

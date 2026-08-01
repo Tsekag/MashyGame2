@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAPI } from '../services/api';
 import { resolveImageUrl } from '../config/api';
-import { User, Calendar, Heart, Image, Trophy, Trash2, Pencil, Eye, EyeOff } from 'lucide-react';
+import { User, Calendar, Heart, Image, Trophy, Trash2, Pencil, Eye, EyeOff, Maximize2, Sparkles } from 'lucide-react';
+import { ImagePreviewModal } from './ImagePreviewModal';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ export function Dashboard() {
   const [editingUpload, setEditingUpload] = useState<{ id: string; title: string; description: string } | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [visibleDescriptions, setVisibleDescriptions] = useState<Record<string, boolean>>({});
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [stats, setStats] = useState({
     totalUploads: 0,
     totalLikes: 0,
@@ -83,6 +85,15 @@ export function Dashboard() {
       setDeletingId(null);
     }
   };
+
+  const previewImages = userUploads.map((upload) => ({
+    src: upload.imageUrl || 'https://via.placeholder.com/300',
+    title: upload.title || 'Untitled',
+    description: upload.description,
+    username: user?.username,
+    likes: upload.likes || 0,
+    createdAt: upload.createdAt,
+  }));
 
   const handleToggleDescription = (uploadId: string) => {
     setVisibleDescriptions((prev) => ({ ...prev, [uploadId]: !prev[uploadId] }));
@@ -183,68 +194,98 @@ export function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {userUploads.map((upload, index) => (
-                <div
+                <article
                   key={upload.id || index}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-300 transform hover:scale-105"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  className="artwork-card"
+                  style={{ animationDelay: `${index * 0.08}s` }}
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div
+                    className="artwork-card-image-wrap"
+                    onClick={() => setPreviewIndex(index)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && setPreviewIndex(index)}
+                    aria-label={`View ${upload.title || 'Untitled'}`}
+                  >
                     <img
                       src={upload.imageUrl || 'https://via.placeholder.com/300'}
                       alt={upload.title || 'Untitled'}
-                      className="w-full h-full object-cover"
                       onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/300'; }}
                     />
-                  </div>
-                  
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold text-white mb-2">{upload.title || 'Untitled'}</h3>
-                    {visibleDescriptions[String(upload.id)] && (
-                      <p className="text-sm text-gray-200 mb-3 bg-white/10 rounded-lg p-3 whitespace-pre-wrap">
-                        {upload.description || 'No description provided.'}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-gray-300">
-                        <Heart className="w-4 h-4" />
-                        <span>{upload.likes || 0} likes</span>
-                      </div>
-                      <div className="text-gray-400">
-                        {upload.createdAt ? new Date(upload.createdAt).toLocaleDateString() : 'Unknown'}
-                      </div>
+                    <div className="artwork-card-image-overlay">
+                      <span className="artwork-card-expand-icon">
+                        <Maximize2 className="h-5 w-5" />
+                      </span>
+                      <span className="artwork-card-expand-label">View Fullscreen</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleDescription(String(upload.id))}
-                      className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/20 text-cyan-200 hover:bg-cyan-500/30 px-3 py-2 text-sm font-semibold transition-colors"
-                    >
-                      {visibleDescriptions[String(upload.id)] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      {visibleDescriptions[String(upload.id)] ? 'Hide Description' : 'View Description'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleStartEdit(upload)}
-                      className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-500/20 text-yellow-200 hover:bg-yellow-500/30 px-3 py-2 text-sm font-semibold transition-colors"
-                    >
-                      <Pencil className="w-4 h-4" />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteUpload(String(upload.id))}
-                      disabled={deletingId === String(upload.id)}
-                      className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {deletingId === String(upload.id) ? 'Deleting...' : 'Delete'}
-                    </button>
                   </div>
-                </div>
+
+                  <div className="artwork-card-body">
+                    <h3 className="artwork-card-title">{upload.title || 'Untitled'}</h3>
+
+                    {visibleDescriptions[String(upload.id)] && (
+                      <div className="artwork-card-description">
+                        <div className="artwork-card-description-label">
+                          <Sparkles className="h-3 w-3" />
+                          Creative Vision
+                        </div>
+                        <p className="artwork-card-description-inner">
+                          {upload.description || 'No description provided.'}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="artwork-card-actions mb-3">
+                      <span className="inline-flex items-center gap-1.5 text-sm text-gray-300">
+                        <Heart className="w-4 h-4 text-red-400" />
+                        {upload.likes || 0} likes
+                      </span>
+                      <span className="artwork-card-date">
+                        {upload.createdAt ? new Date(upload.createdAt).toLocaleDateString() : 'Unknown'}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleDescription(String(upload.id))}
+                        className="artwork-card-action-btn artwork-card-action-btn--view w-full justify-center py-2"
+                      >
+                        {visibleDescriptions[String(upload.id)] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {visibleDescriptions[String(upload.id)] ? 'Hide Vision' : 'View Creative Vision'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(upload)}
+                        className="artwork-card-action-btn artwork-card-action-btn--edit w-full justify-center py-2"
+                      >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUpload(String(upload.id))}
+                        disabled={deletingId === String(upload.id)}
+                        className="artwork-card-action-btn artwork-card-action-btn--delete w-full justify-center py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {deletingId === String(upload.id) ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                </article>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      <ImagePreviewModal
+        images={previewImages}
+        initialIndex={previewIndex ?? 0}
+        isOpen={previewIndex !== null}
+        onClose={() => setPreviewIndex(null)}
+      />
 
       {editingUpload && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
